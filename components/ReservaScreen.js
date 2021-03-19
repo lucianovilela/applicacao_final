@@ -7,7 +7,6 @@ import { Text, Button, CheckBox } from 'react-native-elements';
 import CalendarPicker from 'react-native-calendar-picker';
 import Constants from 'expo-constants';
 import moment from 'moment';
-import * as firebase from 'firebase';
 import ContextAuth from './AuthProvider';
 
 
@@ -25,13 +24,7 @@ const Check = ({ value, click, checked }) => {
   );
 };
 
-const FreeHours = ({ date, select, setSelect }) => {
-  const [hours, setHours] = useState([]);
-  const authContext = useContext(ContextAuth);
-  useEffect(() => {
-    authContext.action.getHorasLivres();
-    setHours([...authContext.state.horasLivres]);
-  }, []);
+const FreeHours = ({ date, select, setSelect, hours }) => {
 
   /*
    */
@@ -49,13 +42,13 @@ const FreeHours = ({ date, select, setSelect }) => {
   return (
     <View style={{ flex: 1 }}>
       <Text>Horários Disponíveis em {dateFormatado}</Text>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} >
         {hours.map((item) => (
           <Check
             value={item}
             click={(i) => {
               if (includes(select, { data: dateFormatado, hora: i })) {
-                setSelect(select.filter((obj, i) => !select[i] === obj));
+                setSelect(select.filter((obj, j) => !(select[j].data === dateFormatado && select[j].hora === i )));
               } else {
                 setSelect([...select, { data: dateFormatado, hora: i }]);
               }
@@ -68,13 +61,18 @@ const FreeHours = ({ date, select, setSelect }) => {
   );
 };
 
-function ReservaScreen({ setShow }) {
+function ReservaScreen({ navigation }) {
   const [value, onChange] = useState(new Date());
+
   const authContext = useContext(ContextAuth);
   
   const [select, setSelect] = useState([]);
   useEffect(()=>{
-    setSelect([...authContext.state.userInfo]);
+    const f = async ()=>{
+      await authContext.action.getHorasLivres();
+      setSelect([...authContext.state.userInfo]);
+    }
+    f();
   }, [  ]);
  
   const onReservar = () => {
@@ -88,12 +86,13 @@ function ReservaScreen({ setShow }) {
         value={value}
         minDate={new Date()}
       />
-      <FreeHours date={value} select={select} setSelect={setSelect} />
+      <FreeHours date={value} select={select} 
+      setSelect={setSelect} hours={authContext.state.horasLivres}/>
 
       <View style={{ marginBottom: 'auto' }}>
         <Button title="reservar" onPress={onReservar} />
 
-        <Button title="cancelar" onPress={() => setShow(false)} />
+        <Button title="cancelar" onPress={() => navigation.navigate('Home')} />
       </View>
     </View>
   );

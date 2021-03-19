@@ -11,6 +11,7 @@ const AuthProvider = ({ children }) => {
           return {
             ...prevState,
             userToken: action.token,
+            isSignout: false,
             isLoading: false,
           };
         case "SIGN_IN":
@@ -26,6 +27,7 @@ const AuthProvider = ({ children }) => {
             isSignout: true,
             userToken: null,
             user: null,
+            userInfo:[]
           };
         case "RESTORE_USER_INFO":
           console.log("RESTORE_USER_INFO", action);
@@ -34,8 +36,8 @@ const AuthProvider = ({ children }) => {
             userInfo: [...action.payload],
           };
 
-        case "RESTORE_USER_INFO":
-          console.log("RESTORE_USER_INFO", action);
+        case "GET_HORAS_FREE":
+          console.log("GET_HORAS_FREE", action);
           return {
             ...prevState,
             horasLivres: [...action.payload],
@@ -44,7 +46,7 @@ const AuthProvider = ({ children }) => {
     },
     {
       isLoading: true,
-      isSignout: false,
+      isSignout: true,
       user: {},
       userToken: null,
       userInfo: [],
@@ -54,19 +56,21 @@ const AuthProvider = ({ children }) => {
 
   const listenerUser = (user) => {
     console.log("onChangeUser", user);
-    dispatch({ type: "SIGN_IN", user: user });
-    firebase
-      .firestore()
-      .collection("registros_tempo")
-      .doc(user.uid)
-      .get()
-      .then((snap) => {
-        console.log("dentro do get", snap.data());
-        dispatch({
-          type: "RESTORE_USER_INFO",
-          payload: [...snap.data().userInfo],
+    if (user) {
+      dispatch({ type: "SIGN_IN", user: user });
+      firebase
+        .firestore()
+        .collection("registros_tempo")
+        .doc(user.uid)
+        .get()
+        .then((snap) => {
+          console.log("dentro do get", snap.data());
+          dispatch({
+            type: "RESTORE_USER_INFO",
+            payload: [...snap.data().userInfo],
+          });
         });
-      });
+    }
   };
 
   React.useEffect(() => {
