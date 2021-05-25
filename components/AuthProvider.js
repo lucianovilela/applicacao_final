@@ -67,7 +67,7 @@ const AuthProvider = ({ children }) => {
           console.log("dentro do get", snap.data());
           dispatch({
             type: "RESTORE_USER_INFO",
-            payload: [...snap.data().userInfo],
+            payload: snap.data().select,
           });
         });
     }
